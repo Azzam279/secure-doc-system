@@ -1,0 +1,5 @@
+/node_modules
+.vscode
+cors.json
+.DS_Store
+**/.DS_Store
