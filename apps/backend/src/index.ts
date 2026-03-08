@@ -17,7 +17,7 @@ const app = express();
 app.use(helmet());
 app.use(cors(
   {
-    origin: true, // process.env.WEB_URL,
+    origin: process.env.WEB_URL,
     credentials: true,
   }
 ));
