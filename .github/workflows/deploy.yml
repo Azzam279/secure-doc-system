@@ -1,4 +1,4 @@
-name: Deploy Application
+name: Deploy Backend
 
 on:
   workflow_dispatch:
@@ -8,13 +8,11 @@ on:
       - main
     paths:
       - "apps/backend/**"
-      - "apps/frontend/**"
 
   pull_request:
     branches:
       - main
     paths:
-      - "apps/frontend/**"
       - "apps/backend/**"
 
 env:
@@ -77,48 +75,3 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --set-env-vars GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},GCS_BUCKET=${{ secrets.GCS_BUCKET }},WEB_URL=${{ secrets.WEB_URL }}
-
-      # ---------- Frontend ----------
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-          cache-dependency-path: apps/frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: apps/frontend
-        run: npm ci
-
-      - name: Disable Next telemetry
-        working-directory: apps/frontend
-        run: npx next telemetry disable
-
-      - name: Cache Next.js build
-        uses: actions/cache@v4
-        with:
-          path: apps/frontend/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('apps/frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-
-
-      - name: Build frontend
-        working-directory: apps/frontend
-        run: npm run build
-        env:
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
-
-      - name: Deploy to Firebase Hosting
-        if: github.event_name == 'push'
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ secrets.GCP_PROJECT_ID }}
-          channelId: live
