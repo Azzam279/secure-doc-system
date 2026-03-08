@@ -75,4 +75,4 @@ jobs:
             --add-cloudsql-instances ${{ secrets.INSTANCE_CONNECTION_NAME }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars GCP_PROJECT_NUMBER=${{ secrets.GCP_PROJECT_NUMBER }},GCS_BUCKET=${{ secrets.GCS_BUCKET }},WEB_URL=${{ secrets.WEB_URL }}
+            --set-env-vars GCP_PROJECT_NUMBER=${{ secrets.GCP_PROJECT_NUMBER }},GCS_BUCKET=${{ secrets.GCS_BUCKET }},WEB_URL=${{ secrets.WEB_URL }},INSTANCE_CONNECTION_NAME=${{ secrets.INSTANCE_CONNECTION_NAME }}
