@@ -4,8 +4,8 @@ import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 const secretManagerClient = new SecretManagerServiceClient();
 
 async function getDatabaseCredentials() {
-  const projectId = process.env.GCP_PROJECT_ID;
-  const secretName = `projects/${projectId}/secrets/cloudsql-db-credentials/versions/latest`;
+  const projectNumber = process.env.GCP_PROJECT_NUMBER;
+  const secretName = `projects/${projectNumber}/secrets/cloudsql-db-credentials/versions/latest`;
 
   try {
     const [version] = await secretManagerClient.accessSecretVersion({
