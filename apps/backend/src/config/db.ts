@@ -32,7 +32,7 @@ async function connectToDatabaseWithAuthProxy() {
     password: credentials.password,
     database: 'document_db',
     host: '127.0.0.1',
-    port: 5433,
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
   };
 
   const pool = new Pool(dbConfig);
