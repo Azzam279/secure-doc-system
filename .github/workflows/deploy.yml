@@ -86,16 +86,14 @@ jobs:
           # cache: "npm"
           # cache-dependency-path: apps/frontend/package-lock.json
 
-      # Install dependencies
       - name: Install frontend dependencies
         working-directory: apps/frontend
         run: npm ci
 
-      # - name: Disable Next telemetry
-      #   working-directory: apps/frontend
-      #   run: npx next telemetry disable
+      - name: Disable Next telemetry
+        working-directory: apps/frontend
+        run: npx next telemetry disable
 
-      # Cache Next.js build cache
       # - name: Cache Next.js build
       #   uses: actions/cache@v4
       #   with:
@@ -104,12 +102,10 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-nextjs-
 
-      # Build frontend
       - name: Build frontend
         working-directory: apps/frontend
         run: npm run build
 
-      # Deploy to Firebase Hosting
       - name: Deploy to Firebase Hosting
         if: github.event_name == 'push'
         uses: FirebaseExtended/action-hosting-deploy@v0
