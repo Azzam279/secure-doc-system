@@ -91,9 +91,9 @@ jobs:
         working-directory: apps/frontend
         run: npm ci
 
-      - name: Disable Next telemetry
-        working-directory: apps/frontend
-        run: npx next telemetry disable
+      # - name: Disable Next telemetry
+      #   working-directory: apps/frontend
+      #   run: npx next telemetry disable
 
       # Cache Next.js build cache
       # - name: Cache Next.js build
