@@ -7,8 +7,8 @@ import DocumentsClient from "@/components/DocumentsClient";
 export default async function DashboardPage() {
   const user = await getServerUser() as { uid?: string; role?: string } | null;
 
-  const cookieStore = cookies();
-  const session = (await cookieStore).get("session");
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session");
   if (!session) return null;
 
   const docs = await apiFetch<Document[]>('/documents', {

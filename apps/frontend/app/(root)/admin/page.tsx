@@ -3,7 +3,7 @@ import { getServerUser } from "@/lib/server-user";
 import GetUsers from "./get-users";
 
 export default async function AdminPage() {
-  const user = await getServerUser();
+  const user = await getServerUser() as { uid?: string; role?: string } | null;
 
   if (!user) {
     redirect("/login");

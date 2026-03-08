@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { apiFetch } from "@/lib/api";
 
 export async function getServerUser() {
-  const cookieStore = cookies();
-  const session = (await cookieStore).get("session");
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session");
 
   if (!session) return null;
 
