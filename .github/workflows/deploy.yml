@@ -1,0 +1,103 @@
+name: Deploy Application
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/backend/**"
+      - "apps/frontend/**"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/frontend/**"
+      - "apps/backend/**"
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: asia-southeast2
+  SERVICE: document-api
+  REPOSITORY: document-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Authenticate to Google Cloud
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      # Setup Docker build cache
+      - uses: docker/setup-buildx-action@v3
+
+      # Build and push backend image
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./apps/backend
+          push: true
+          tags: |
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/api:${{ github.sha }}
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Determine service name
+      - name: Set Service Name
+        id: service
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "name=${SERVICE}-pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${SERVICE}" >> $GITHUB_OUTPUT
+          fi
+
+      # Deploy backend
+      - name: Deploy Backend
+        run: |
+          gcloud run deploy ${{ steps.service.outputs.name }} \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/api:${{ github.sha }} \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated
+
+      # ---------- Frontend ----------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        run: |
+          cd apps/frontend
+          npm install
+
+      - name: Build frontend
+        run: |
+          cd apps/frontend
+          npm run build
+
+      - name: Deploy to Firebase Hosting
+        if: github.event_name == 'push'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ secrets.GCP_PROJECT_ID }}
+          channelId: live
