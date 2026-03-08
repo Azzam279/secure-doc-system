@@ -72,6 +72,7 @@ jobs:
           gcloud run deploy ${{ steps.service.outputs.name }} \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/api:${{ github.sha }} \
             --region $REGION \
+            --add-cloudsql-instances ${{ secrets.INSTANCE_CONNECTION_NAME }} \
             --platform managed \
             --allow-unauthenticated \
             --set-env-vars GCP_PROJECT_NUMBER=${{ secrets.GCP_PROJECT_NUMBER }},GCS_BUCKET=${{ secrets.GCS_BUCKET }},WEB_URL=${{ secrets.WEB_URL }}

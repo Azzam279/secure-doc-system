@@ -1,7 +1,9 @@
 import { Pool } from 'pg';
+import { Connector, IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 
 const secretManagerClient = new SecretManagerServiceClient();
+const connector = new Connector();
 
 async function getDatabaseCredentials() {
   const projectNumber = process.env.GCP_PROJECT_NUMBER;
@@ -27,15 +29,25 @@ async function getDatabaseCredentials() {
 async function connectToDatabaseWithAuthProxy() {
   const credentials = await getDatabaseCredentials();
 
-  const dbConfig = {
+  // const dbConfig = {
+  //   user: credentials.username,
+  //   password: credentials.password,
+  //   database: 'document_db',
+  //   host: '127.0.0.1',
+  //   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+  // };
+
+  const clientOpts = await connector.getOptions({
+    instanceConnectionName: process.env.INSTANCE_CONNECTION_NAME!,
+    ipType: IpAddressTypes.PUBLIC,
+  });
+
+  const pool = new Pool({
+    ...clientOpts,
     user: credentials.username,
     password: credentials.password,
-    database: 'document_db',
-    host: '127.0.0.1',
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-  };
-
-  const pool = new Pool(dbConfig);
+    database: "document_db",
+  });
 
   try {
     const client = await pool.connect();
