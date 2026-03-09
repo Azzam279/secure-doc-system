@@ -38,7 +38,7 @@ router.post("/session", async (req, res) => {
     res.cookie("session", sessionCookie, {
       httpOnly: true, // Prevent XSS token theft
       secure: process.env.NODE_ENV === "production", // Only HTTPS
-      sameSite: "strict",
+      // sameSite: "strict",
       maxAge: expiresIn,
     });
 
