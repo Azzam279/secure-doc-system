@@ -15,12 +15,10 @@ import { errorHandler } from "./middleware/error.middleware";
 const app = express();
 
 app.use(helmet());
-app.use(cors(
-  {
-    origin: process.env.WEB_URL,
-    credentials: true,
-  }
-));
+app.use(cors({
+  origin: process.env.WEB_URL,
+  credentials: true,
+}));
 app.use(cookieParser());
 app.use(express.json());
 app.use(apiRateLimiter);

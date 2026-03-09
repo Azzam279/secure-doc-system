@@ -19,6 +19,7 @@ if (!admin.apps.length) {
     // Cloud Run / production
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
+      projectId: process.env.FIREBASE_PROJECT_ID,
       storageBucket: process.env.GCS_BUCKET,
     });
   }

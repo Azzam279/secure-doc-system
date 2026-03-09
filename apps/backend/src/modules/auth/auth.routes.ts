@@ -34,12 +34,11 @@ router.post("/session", async (req, res) => {
         [decoded.uid, decoded.email]
       );
     }
-    console.log('sessionCookie', sessionCookie)
 
     res.cookie("session", sessionCookie, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      httpOnly: true, // Prevent XSS token theft
+      secure: process.env.NODE_ENV === "production", // Only HTTPS
+      sameSite: "none", // Allows cross-site requests (Vercel → Cloud Run)
       maxAge: expiresIn,
     });
 

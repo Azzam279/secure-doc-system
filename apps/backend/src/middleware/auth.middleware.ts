@@ -16,6 +16,14 @@ export async function verifyToken(
 
     const decoded = await firebaseAdmin.auth().verifyIdToken(token);
 
+    if (decoded.aud !== process.env.FIREBASE_PROJECT_ID) {
+      throw new Error("Invalid token audience");
+    }
+
+    if (!decoded.iss.includes(process.env.FIREBASE_PROJECT_ID!)) {
+      throw new Error("Invalid token issuer");
+    }
+
     const pool = await dbPool();
     const result = await pool.query(
       "SELECT role FROM users WHERE firebase_uid = $1",

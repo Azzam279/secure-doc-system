@@ -1,9 +1,9 @@
 import { Pool } from 'pg';
-import { Connector, IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 
 const secretManagerClient = new SecretManagerServiceClient();
-const connector = new Connector();
+
+let pool: Pool | null = null;
 
 async function getDatabaseCredentials() {
   const projectNumber = process.env.GCP_PROJECT_NUMBER;
@@ -27,26 +27,20 @@ async function getDatabaseCredentials() {
 }
 
 async function connectToDatabaseWithAuthProxy() {
+  if (pool) {
+    return pool; // reuse existing pool
+  }
+
   const credentials = await getDatabaseCredentials();
 
-  // const dbConfig = {
-  //   user: credentials.username,
-  //   password: credentials.password,
-  //   database: 'document_db',
-  //   host: '127.0.0.1',
-  //   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-  // };
-
-  const clientOpts = await connector.getOptions({
-    instanceConnectionName: process.env.INSTANCE_CONNECTION_NAME!,
-    ipType: IpAddressTypes.PUBLIC,
-  });
-
-  const pool = new Pool({
-    ...clientOpts,
+  pool = new Pool({
     user: credentials.username,
     password: credentials.password,
-    database: "document_db",
+    database: process.env.DB_NAME,
+    host: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
+    max: 5, // limit connections per container
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   });
 
   try {
