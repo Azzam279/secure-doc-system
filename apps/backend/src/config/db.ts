@@ -32,13 +32,14 @@ async function connectToDatabaseWithAuthProxy() {
   }
 
   const credentials = await getDatabaseCredentials();
+  const host = process.env.NODE_ENV === 'production' ? `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}` : 'localhost';
 
   pool = new Pool({
+    host,
     user: credentials.username,
     password: credentials.password,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
-    host: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
     max: 5, // limit connections per container
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
