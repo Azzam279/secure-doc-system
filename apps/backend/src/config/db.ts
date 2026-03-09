@@ -6,8 +6,8 @@ const secretManagerClient = new SecretManagerServiceClient();
 let pool: Pool | null = null;
 
 async function getDatabaseCredentials() {
-  const projectNumber = process.env.GCP_PROJECT_NUMBER;
-  const secretName = `projects/${projectNumber}/secrets/cloudsql-db-credentials/versions/latest`;
+  const projectId = process.env.GCP_PROJECT_ID;
+  const secretName = `projects/${projectId}/secrets/cloudsql-db-credentials/versions/latest`;
 
   try {
     const [version] = await secretManagerClient.accessSecretVersion({
@@ -37,6 +37,7 @@ async function connectToDatabaseWithAuthProxy() {
     user: credentials.username,
     password: credentials.password,
     database: process.env.DB_NAME,
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
     host: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
     max: 5, // limit connections per container
     idleTimeoutMillis: 30000,
