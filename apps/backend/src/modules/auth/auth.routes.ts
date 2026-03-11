@@ -35,12 +35,16 @@ router.post("/session", async (req, res) => {
       );
     }
 
-    res.cookie("session", sessionCookie, {
+    const isProd = process.env.NODE_ENV === "production";
+    const cookieOptions = {
       httpOnly: true, // Prevent XSS token theft
-      secure: process.env.NODE_ENV === "production", // Only HTTPS
-      // sameSite: "strict",
+      secure: isProd, // Only HTTPS in prod
+      sameSite: (isProd ? "none" as const : "lax" as const),
       maxAge: expiresIn,
-    });
+      path: "/",
+    };
+
+    res.cookie("session", sessionCookie, cookieOptions);
 
     res.status(200).json({ message: "Session created" });
   } catch (error) {
@@ -53,7 +57,16 @@ router.post("/session", async (req, res) => {
  * Logout
  */
 router.post("/logout", async (_, res) => {
-  res.clearCookie("session");
+  const isProd = process.env.NODE_ENV === "production";
+  res.clearCookie("session", {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+    ...(process.env.COOKIE_DOMAIN
+      ? { domain: process.env.COOKIE_DOMAIN }
+      : {}),
+  });
   res.status(200).json({ message: "Logged out" });
 });
 
