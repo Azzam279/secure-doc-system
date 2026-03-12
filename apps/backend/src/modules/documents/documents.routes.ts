@@ -9,27 +9,43 @@ import dbPool from "../../config/db";
 const router = Router();
 
 router.post("/upload-url", verifySession, async (req: any, res) => {
-  const { fileName, mimeType, fileSize } = req.body;
+  try {
+    const { fileName, mimeType, fileSize } = req.body ?? {};
 
-  validateFileInput(mimeType, fileSize);
+    if (!fileName || !mimeType || typeof fileSize !== "number") {
+      return res.status(400).json({ message: "Invalid upload request body" });
+    }
 
-  const safeName = sanitize(fileName);
-  const uniqueId = crypto.randomUUID();
-  const storagePath = `${req.user.uid}/${uniqueId}-${safeName}`;
+    validateFileInput(mimeType, fileSize);
 
-  const file = bucket.file(storagePath);
+    const safeName = sanitize(fileName);
+    const uniqueId = crypto.randomUUID();
+    const storagePath = `${req.user.uid}/${uniqueId}-${safeName}`;
 
-  const [url] = await file.getSignedUrl({
-    version: "v4",
-    action: "write",
-    expires: Date.now() + 15 * 60 * 1000,
-    contentType: mimeType,
-    // extensionHeaders: {
-    //   "x-goog-if-generation-match": "0",
-    // },
-  });
+    const file = bucket.file(storagePath);
 
-  res.json({ url, storagePath });
+    const [url] = await file.getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 15 * 60 * 1000,
+      contentType: mimeType,
+      // extensionHeaders: {
+      //   "x-goog-if-generation-match": "0",
+      // },
+    });
+
+    return res.json({ url, storagePath });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    const status =
+      message === "Invalid file type" ||
+      message === "File too large" ||
+      message === "Invalid upload request body"
+        ? 400
+        : 500;
+    console.error("Error generating signed URL:", err);
+    return res.status(status).json({ message });
+  }
 });
 
 router.post("/", verifySession, async (req: any, res) => {
