@@ -22,6 +22,7 @@ export async function apiFetch<T>(
     return returnRawResponse ? (res as unknown as T) : res.json();
   } catch (error) {
     console.error("API Fetch Error:", error);
+    console.log('test')
     throw error;
   }
 }
