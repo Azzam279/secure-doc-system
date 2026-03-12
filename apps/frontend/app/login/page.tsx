@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { auth, googleProvider } from "@/lib/firebase";
-import { createSession } from "@/lib/auth-session";
+import { createSession } from "@/actions/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,11 +14,17 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false)
 
-  const login = async () => {
+  const login = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setLoading(true)
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      await createSession()
+
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+      const idToken = await user.getIdToken();
+      await createSession(idToken)
+
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -30,7 +36,12 @@ export default function LoginPage() {
   const loginWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      await createSession()
+
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+      const idToken = await user.getIdToken();
+      await createSession(idToken)
+
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -39,7 +50,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center h-screen">
-      <div className="bg-white p-8 rounded-xl shadow-md w-96">
+      <form onSubmit={(e) => login(e)} className="bg-white p-8 rounded-xl shadow-md w-96">
         <h2 className="text-2xl font-semibold mb-6 text-center">
           Login
         </h2>
@@ -63,7 +74,7 @@ export default function LoginPage() {
         />
 
         <button
-          onClick={login}
+          type="submit"
           className="w-full bg-blue-600 text-white p-2 rounded mb-3 cursor-pointer hover:bg-blue-700 disabled:opacity-50"
           disabled={loading}
         >
@@ -76,7 +87,7 @@ export default function LoginPage() {
         >
           Sign in with Google
         </button>
-      </div>
+      </form>
     </div>
   );
 }

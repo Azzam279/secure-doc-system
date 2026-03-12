@@ -1,6 +1,7 @@
 export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {},
+  returnRawResponse = false
 ): Promise<T> {
   try {
     const res = await fetch(
@@ -18,7 +19,7 @@ export async function apiFetch<T>(
       throw new Error(await res.text());
     }
 
-    return res.json();
+    return returnRawResponse ? (res as unknown as T) : res.json();
   } catch (error) {
     console.error("API Fetch Error:", error);
     throw error;

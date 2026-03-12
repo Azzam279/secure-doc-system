@@ -1,12 +1,12 @@
 import { auth } from "./firebase";
 import { apiFetch } from "@/lib/api";
 
-export async function createSession(token: string | null = null) {
+export async function createSession() {
   const user = auth.currentUser;
 
   if (!user) throw new Error("User not authenticated");
 
-  const idToken = token ?? await user.getIdToken();
+  const idToken = await user.getIdToken();
 
   await apiFetch(
     "/auth/session",

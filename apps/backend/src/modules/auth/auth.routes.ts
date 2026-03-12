@@ -42,6 +42,7 @@ router.post("/session", async (req, res) => {
       sameSite: (isProd ? "none" as const : "lax" as const),
       maxAge: expiresIn,
       path: "/",
+      domain: ".vercel.app",
     };
 
     res.cookie("session", sessionCookie, cookieOptions);
