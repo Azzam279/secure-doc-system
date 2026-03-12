@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { fileSchema } from "@/lib/schemas";
-import { apiFetch } from "@/lib/api";
+import { requestSignedUrl, saveMetadata } from "@/actions/document";
 
 export default function FileUploader({
   onUploadStart,
@@ -65,18 +65,7 @@ export default function FileUploader({
 
     try {
       // Request signed URL
-      const { url, storagePath } = await apiFetch<{
-        url: string;
-        storagePath: string;
-      }>("/documents/upload-url", {
-        method: "POST",
-        body: JSON.stringify({
-          fileName: selectedFile.name,
-          mimeType: selectedFile.type,
-          fileSize: selectedFile.size,
-        }),
-        credentials: "include",
-      });
+      const { url, storagePath } = await requestSignedUrl(selectedFile);
 
       // optimistic update
       onUploadStart?.(selectedFile);
@@ -85,16 +74,7 @@ export default function FileUploader({
       await uploadWithProgress(url, selectedFile, setProgress)
 
       // Save metadata
-      await apiFetch("/documents", {
-        method: "POST",
-        body: JSON.stringify({
-          storagePath,
-          fileName: selectedFile.name,
-          fileSize: selectedFile.size,
-          mimeType: selectedFile.type,
-        }),
-        credentials: "include",
-      });
+      await saveMetadata(storagePath, selectedFile);
 
       // reset state
       setFile(null);
